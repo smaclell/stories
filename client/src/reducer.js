@@ -5,7 +5,7 @@ function save(state, text, parent) {
     return state;
   }
 
-  const id = (parseInt(state.get('paragraphs').last().get('id')) + 1).toString();
+  const id = (state.get('paragraphs').size + 1).toString();
   const paragraph = Map({id: id, text: text})
 
   return state
