@@ -4,100 +4,197 @@ import {expect} from 'chai';
 import reducer from '../src/reducer';
 
 describe('reducer', () => {
-  it('handles SAVE_PARAGRAPH adding after existing paragraph', () => {
+  it('handles SAVE_PARAGRAPH as the first child of an existing paragraph', () => {
+    const initialState = fromJS({
+      paragraphs: {
+        '1': {id: '1', text: 'sample'}
+      }
+    });
+
+    const action = {
+      type: 'SAVE_PARAGRAPH',
+      text: 'new',
+      parent: '1'
+    };
+
+    const nextState = reducer(initialState, action);
+
+    expect(nextState).to.equal(fromJS({
+        paragraphs: {
+          '1': {id: '1', text: 'sample', paragraphs: ['2'] },
+          '2': {id: '2', text: 'new'}
+        }
+      }
+    ));
+
+  });
+
+  it('handles SAVE_PARAGRAPH as an extra child of an existing paragraph', () => {
+    const initialState = fromJS({
+      paragraphs: {
+        '1': {id: '1', text: 'sample', paragraphs: ['2'] },
+        '2': {id: '2', text: 'other'}
+      }
+    });
+
+    const action = {
+      type: 'SAVE_PARAGRAPH',
+      text: 'new',
+      parent: '1'
+    };
+
+    const nextState = reducer(initialState, action);
+
+    expect(nextState).to.equal(fromJS({
+        paragraphs: {
+          '1': {id: '1', text: 'sample', paragraphs: ['3', '2'] },
+          '2': {id: '2', text: 'other'},
+          '3': {id: '3', text: 'new'}
+        }
+      }
+    ));
+
+  });
+
+  it('handles SAVE_PARAGRAPH removes "creating" from the paragraph', () => {
+    const initialState = fromJS({
+      paragraphs: {
+        '1': {id: '1', text: 'sample', creating: true}
+      }
+    });
+
+    const action = {
+      type: 'SAVE_PARAGRAPH',
+      text: 'new',
+      parent: '1'
+    };
+
+    const nextState = reducer(initialState, action);
+
+    expect(nextState).to.equal(fromJS({
+        paragraphs: {
+          '1': {id: '1', text: 'sample', paragraphs: ['2'] },
+          '2': {id: '2', text: 'new'}
+        }
+      }
+    ));
+
+  });
+
+  it('handles SAVE_PARAGRAPH with missing parent', () => {
     const initialState = Map({
-      haxLastId: 1,
-      story: Map({
-        creating: true,
-        paragraphs:List([
-          Map({id: 1, text: "sample"})
-        ])
+      paragraphs: Map({
+        '1': {id: '1', text: 'sample' }
       })
     });
 
     const action = {
       type: 'SAVE_PARAGRAPH',
-      text: "new"
+      text: 'new',
+      parent: '2'
+    };
+
+    const nextState = reducer(initialState, action);
+
+    expect(nextState).to.equal(initialState);
+  });
+
+  it('handles SHOW_CREATE_PARAGRAPH on valid parent', () => {
+    const initialState = fromJS({
+      paragraphs: {
+        '1': {id: '1', text: 'sample' }
+      }
+    });
+
+    const action = {
+      type: 'SHOW_CREATE_PARAGRAPH',
+      parent: '1'
     };
 
     const nextState = reducer(initialState, action);
 
     expect(nextState).to.equal(fromJS({
-      haxLastId: 2,
-      story: {
-        paragraphs: [
-          {id: 1, text: "sample"},
-          {id: 2, text: "new"}
-        ]
+        paragraphs: {
+          '1': {id: '1', text: 'sample', creating: true }
+        }
       }
-    }));
+    ));
+
   });
 
-  it('handles SAVE_PARAGRAPH adding after starter', () => {
+  it('handles SHOW_CREATE_PARAGRAPH with missing parent', () => {
     const initialState = Map({
-      haxLastId: 1,
-      story: Map({
-        creating: true,
-        starter: 1
+      paragraphs: Map({
+        '1': {id: '1', text: 'sample' }
       })
     });
 
     const action = {
-      type: 'SAVE_PARAGRAPH',
-      text: "new"
+      type: 'SHOW_CREATE_PARAGRAPH',
+      parent: '2'
+    };
+
+    const nextState = reducer(initialState, action);
+
+    expect(nextState).to.equal(initialState);
+  });
+
+  it('handles HIDE_CREATE_PARAGRAPH on valid parent who is creating', () => {
+    const initialState = fromJS({
+      paragraphs: {
+        '1': {id: '1', text: 'sample', creating: true }
+      }
+    });
+
+    const action = {
+      type: 'HIDE_CREATE_PARAGRAPH',
+      parent: '1'
     };
 
     const nextState = reducer(initialState, action);
 
     expect(nextState).to.equal(fromJS({
-      haxLastId: 2,
-      story: {
-        starter: 1,
-        paragraphs: [
-          {id: 2, text: "new"}
-        ]
+        paragraphs: {
+          '1': {id: '1', text: 'sample' }
+        }
       }
-    }));
+    ));
+
   });
 
-  it('handles CREATE_PARAGRAPH for an existing story', () => {
+  it('handles HIDE_CREATE_PARAGRAPH on valid parent who is not creating', () => {
+    const initialState = fromJS({
+      paragraphs: {
+        '1': {id: '1', text: 'sample' }
+      }
+    });
+
+    const action = {
+      type: 'HIDE_CREATE_PARAGRAPH',
+      parent: '1'
+    };
+
+    const nextState = reducer(initialState, action);
+
+    expect(nextState).to.equal(initialState);
+
+  });
+
+  it('handles HIDE_CREATE_PARAGRAPH with missing parent', () => {
     const initialState = Map({
-      story: Map({
-        starter: 1
+      paragraphs: Map({
+        '1': {id: '1', text: 'sample' }
       })
     });
 
     const action = {
-      type: 'CREATE_PARAGRAPH'
+      type: 'HIDE_CREATE_PARAGRAPH',
+      parent: '2'
     };
 
     const nextState = reducer(initialState, action);
 
-    expect(nextState).to.equal(fromJS({
-      story: {
-        creating: true,
-        starter: 1
-      }
-    }));
-  });
-
-  it('handles CREATE_PARAGRAPH for a new story', () => {
-    const initialState = Map({
-    });
-
-    const action = {
-      type: 'CREATE_PARAGRAPH',
-      starter: 1
-    };
-
-    const nextState = reducer(initialState, action);
-
-    expect(nextState).to.equal(fromJS({
-      story: {
-        creating: true,
-        starter: 1
-      }
-    }));
+    expect(nextState).to.equal(initialState);
   });
 
 });

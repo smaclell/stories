@@ -3,37 +3,42 @@ import PureRenderMixin from 'react-addons-pure-render-mixin';
 import {connect} from 'react-redux';
 import * as actionCreators from '../action_creators';
 import {Starter} from './Starter'
-import {Paragraph} from './Paragraph'
+import {ParagraphComponent} from './Paragraph'
+import {EditParagraph} from './EditParagraph'
 
 export const Story = React.createClass({
   mixins: [PureRenderMixin],
   render: function() {
+
+    var editActions = {
+      hideCreateParagraph: this.props.hideCreateParagraph,
+      saveParagraph: this.props.saveParagraph
+    }
+
     return <div className="story">
       <Starter {...this.props.starter} />
       <div className="paragraphs">
+        {this.props.creating && <EditParagraph key={"new-paragraph-" + this.props.id } parent={this.props.starter.id} {...editActions} />}
         {this.props.paragraphs.map(paragraph =>
-          <Paragraph key={paragraph.id} {...paragraph} createParagraph={this.props.createParagraph} />
+          <ParagraphComponent key={"paragraph-" + paragraph.id} {...paragraph} />
         )}
-        {this.props.creating ? <Paragraph key={-1} edit={true} saveParagraph={this.props.saveParagraph} /> : "" }
       </div>
     </div>;
   }
 });
 
 function mapStateToProps(state) {
-  const story = state.get('story').toJS();
-  const starter = (state.getIn(['starters', story.starter.toString()]) || {}).toJS();
-  const creating = !!story.creating;
+  const starterId = state.getIn(['story', 'starter']);
+  const starter = state.getIn(['paragraphs', starterId]).toJS();
+  const creating = !!starter.creating;
 
-  const paragraphs = story.paragraphs;
-  if(paragraphs.length > 0) {
-    paragraphs[paragraphs.length-1].canAdd = !creating;
-  }
-  console.log(paragraphs);
   return {
     starter,
-    paragraphs: paragraphs,
-    creating: creating
+    creating: creating,
+    actions: actionCreators,
+    paragraphs: starter.paragraphs && starter.paragraphs.map(
+      id => state.getIn(['paragraphs', id]).toJS()
+    )
   }
 }
 

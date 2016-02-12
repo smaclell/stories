@@ -22,8 +22,17 @@ body {
   word-break: break-all;
 }
 
+/* TODO: Allow bigger content to scroll the page instead of getting crushed. */
+.paragraphs {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  justify-content: space-between;
+}
+
 .paragraph {
   width: 400px;
+  display: inline-block;
 }
 
 .paragraph p {

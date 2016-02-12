@@ -1,37 +1,48 @@
 import {List, Map, fromJS} from 'immutable';
 
-function save(state, text) {
-  const paragraphs = state.getIn(['story', 'paragraphs']) || List();
+function save(state, text, parent) {
+  if(!state.hasIn(['paragraphs', parent])) {
+    return state;
+  }
 
-  const id = state.get('haxLastId') + 1;
-
+  const id = (parseInt(state.get('paragraphs').last().get('id')) + 1).toString();
   const paragraph = Map({id: id, text: text})
 
   return state
-    .set('haxLastId', id)
-    .deleteIn(['story','creating'])
-    .setIn(['story', 'paragraphs'], paragraphs.push(paragraph));
+    .updateIn(
+      ['paragraphs', parent, 'paragraphs'],
+      List(),
+      paragraphs => paragraphs.unshift(id)
+    )
+    .deleteIn(['paragraphs', parent, 'creating'])
+    .setIn(['paragraphs', id], paragraph);
 }
 
-function create(state, starter) {
-  var change = {story: {creating: true}}
-  if(starter !== undefined) {
-    change.story.starter = starter;
+function showCreate(state, parent) {
+  if(!state.hasIn(['paragraphs', parent])) {
+    return state;
   }
-  return state.mergeDeep(change);
+
+  return state.setIn(['paragraphs', parent, 'creating'], true);
+}
+
+function hideCreate(state, parent) {
+  return state.deleteIn(['paragraphs', parent, 'creating'])
 }
 
 var INITIAL_STATE = fromJS({
-  haxLastId: 3,
   starters: {
-    "1": {id: 1, text: "Once upon a time"}
+    "1": {id: "1", text: "Once upon a time", paragraphs: ["2", "3"] }
+  },
+  paragraphs: {
+    "1": {id: "1", text: "Once upon a time", paragraphs: ["2", "3"]},
+    "2": {id: "2", text: "A", paragraphs: ["4", "5"]},
+    "3": {id: "3", text: "B"},
+    "4": {id: "4", text: "A1"},
+    "5": {id: "5", text: "A2"}
   },
   story: {
-    starter: 1,
-    paragraphs: [
-      {id: 2, text: "A"},
-      {id: 3, text: "B"}
-    ]
+    starter: "1"
   }
 });
 
@@ -39,10 +50,12 @@ export default function(state = INITIAL_STATE, action) {
   switch(action.type) {
   case 'SHOW_STORY':
     return state;
-  case 'CREATE_PARAGRAPH':
-    return create(state, action.starter);
+  case 'SHOW_CREATE_PARAGRAPH':
+    return showCreate(state, action.parent);
+  case 'HIDE_CREATE_PARAGRAPH':
+    return hideCreate(state, action.parent);
   case 'SAVE_PARAGRAPH':
-    return save(state, action.text);
+    return save(state, action.text, action.parent);
   }
   return state;
 }
