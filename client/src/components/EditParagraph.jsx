@@ -15,6 +15,7 @@ export const EditParagraph = React.createClass({
   },
   componentDidMount: function(){
     this.refs.add.focus();
+    this.refs.edit.focus();
 
     this.refs.edit.addEventListener('keypress', this.handleEnter);
   },
