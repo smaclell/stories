@@ -4,43 +4,130 @@ import {expect} from 'chai';
 import reducer from '../src/reducer';
 
 describe('reducer', () => {
-  it('handles FETCHED_STARTERS saves starter paragraphs', () => {
-    // TODO: Mock and fetch the goods.
+
+  it('handles SHOW_STORY with existing paragraph', () => {
     const initialState = fromJS({
+      paragraphs: {
+        '1': {ignored: true}
+      }
     });
 
     const action = {
-      type: 'FETCHED_STARTERS',
-      result: {
-        _links: {
-          items: [{
-            _links: [
-              { href: '/x/b' },
-              { href: '/x/c' },
-            ],
-            id: 'a',
-            text: 'text'
-          },
-          {
-            _links: [
-              { href: '/x/e' },
-              { href: '/x/f' },
-            ],
-            id: 'd',
-            text: 'other'
-          }]
-        }
-      }
+      type: 'SHOW_STORY',
+      starter: '1'
     };
 
     const nextState = reducer(initialState, action);
 
     expect(nextState).to.equal(fromJS({
-      paragraphs: {
-        '1': {id: '1', text: 'sample', paragraphs: ['2'] },
-        '2': {id: '2', text: 'other'}
+        paragraphs: {
+          '1': {ignored: true}
+        },
+        story: {
+          starter: '1'
+        }
       }
-    }));
+    ));
+  });
+
+  it('handles SHOW_STORY with existing paragraph and story', () => {
+    const initialState = fromJS({
+      paragraphs: {
+        '1': {ignored: true},
+        '2': {ignored: true}
+      },
+      story: {
+        starter: '2'
+      }
+    });
+
+    const action = {
+      type: 'SHOW_STORY',
+      starter: '1'
+    };
+
+    const nextState = reducer(initialState, action);
+
+    expect(nextState).to.equal(fromJS({
+        paragraphs: {
+          '1': {ignored: true},
+          '2': {ignored: true},
+        },
+        story: {
+          starter: '1'
+        }
+      }
+    ));
+  });
+
+  it('handles SHOW_STORY with missing paragraph', () => {
+    const initialState = fromJS({
+      paragraphs: {
+      }
+    });
+
+    const action = {
+      type: 'SHOW_STORY',
+      starter: '1'
+    };
+
+    const nextState = reducer(initialState, action);
+
+    expect(nextState).to.equal(initialState);
+  });
+
+  it('handles RECIEVE_STARTERS with no data', () => {
+    const initialState = fromJS({
+    });
+
+    const action = {
+      type: 'RECIEVE_STARTERS',
+      starters: [
+        {id: '1', text: 'a', links: ['/a/', '/b/']},
+        {id: '2', text: 'b'}
+      ]
+    };
+
+    const nextState = reducer(initialState, action);
+
+    expect(nextState).to.equal(fromJS({
+        starters: ['1', '2'],
+        paragraphs: {
+          '1': {id: '1', text: 'a', links: ['/a/', '/b/']},
+          '2': {id: '2', text: 'b'}
+        }
+      }
+    ));
+  });
+
+  it('handles RECIEVE_STARTERS with existing data', () => {
+    const initialState = fromJS({
+      starters: ['1', '3'],
+        paragraphs: {
+          '1': {id: '1', text: 'q', links: ['/q/']},
+          '3': {id: '3', text: 'existing' }
+        }
+    });
+
+    const action = {
+      type: 'RECIEVE_STARTERS',
+      starters: [
+        {id: '1', text: 'a', links: ['/a/', '/b/']},
+        {id: '2', text: 'b'}
+      ]
+    };
+
+    const nextState = reducer(initialState, action);
+
+    expect(nextState).to.equal(fromJS({
+        starters: ['1', '3', '2'],
+        paragraphs: {
+          '1': {id: '1', text: 'a', links: ['/a/', '/b/']},
+          '2': {id: '2', text: 'b'},
+          '3': {id: '3', text: 'existing' }
+        }
+      }
+    ));
   });
 
   it('handles SAVE_PARAGRAPH as the first child of an existing paragraph', () => {

@@ -30,15 +30,34 @@ function hideCreate(state, parent) {
   return state.deleteIn(['paragraphs', parent, 'creating'])
 }
 
-function fetchStarters() {
-  fetch( "http://localhost:3000/api/v1/starters/")
-    .then(function(response) {
-      return response.json();
-    }).then(function(json) {
-      console.log('parsed json', json);
-    }).catch(function(ex) {
-      console.log('parsing failed', ex);
-    });
+function showStory(state, starterId) {
+  if(!state.hasIn(['paragraphs', starterId])) {
+    return state;
+  }
+
+  return state.setIn(['story', 'starter'], starterId);
+}
+
+function receiveStarters(state, starters) {
+  if( !state.has('starters') ) {
+    state = state.set('starters', List());
+  }
+
+  var startersList = state.get('starters');
+
+  for(var i in starters) {
+    var s = starters[i];
+    var data = fromJS(s);
+    state = state.setIn(['paragraphs', s.id], data);
+
+    if( !startersList.includes(s.id) ) {
+      startersList = startersList.push(s.id);
+    }
+  };
+
+  state = state.set('starters', startersList);
+
+  return state;
 }
 
 var INITIAL_STATE = fromJS({
@@ -60,7 +79,9 @@ var INITIAL_STATE = fromJS({
 export default function(state = INITIAL_STATE, action) {
   switch(action.type) {
   case 'SHOW_STORY':
-    return state;
+    return showStory(state, action.starter);
+  case 'RECIEVE_STARTERS':
+    return receiveStarters(state, action.starters);
   case 'SHOW_CREATE_PARAGRAPH':
     return showCreate(state, action.parent);
   case 'HIDE_CREATE_PARAGRAPH':
