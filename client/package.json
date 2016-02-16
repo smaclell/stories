@@ -22,6 +22,8 @@
     "chai": "^3.4.1",
     "chai-immutable": "^1.5.3",
     "css-loader": "^0.23.1",
+    "exports-loader": "^0.6.3",
+    "imports-loader": "^0.6.5",
     "jsdom": "^7.2.2",
     "mocha": "^2.3.4",
     "react-addons": "^0.9.0",
@@ -39,12 +41,15 @@
     ]
   },
   "dependencies": {
+    "es6-promise": "^3.1.2",
     "immutable": "^3.7.6",
     "react": "^0.14.6",
     "react-addons-pure-render-mixin": "^0.14.6",
     "react-dom": "^0.14.6",
     "react-redux": "^4.0.6",
     "react-router": "^1.0.0-rc3",
-    "redux": "^3.0.5"
+    "redux": "^3.0.5",
+    "redux-thunk": "^1.0.3",
+    "whatwg-fetch": "^0.11.0"
   }
 }

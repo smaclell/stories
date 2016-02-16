@@ -30,6 +30,17 @@ function hideCreate(state, parent) {
   return state.deleteIn(['paragraphs', parent, 'creating'])
 }
 
+function fetchStarters() {
+  fetch( "http://localhost:3000/api/v1/starters/")
+    .then(function(response) {
+      return response.json();
+    }).then(function(json) {
+      console.log('parsed json', json);
+    }).catch(function(ex) {
+      console.log('parsing failed', ex);
+    });
+}
+
 var INITIAL_STATE = fromJS({
   starters: {
     "1": {id: "1", text: "Once upon a time", paragraphs: ["2", "3"] }

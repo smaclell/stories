@@ -4,6 +4,45 @@ import {expect} from 'chai';
 import reducer from '../src/reducer';
 
 describe('reducer', () => {
+  it('handles FETCHED_STARTERS saves starter paragraphs', () => {
+    // TODO: Mock and fetch the goods.
+    const initialState = fromJS({
+    });
+
+    const action = {
+      type: 'FETCHED_STARTERS',
+      result: {
+        _links: {
+          items: [{
+            _links: [
+              { href: '/x/b' },
+              { href: '/x/c' },
+            ],
+            id: 'a',
+            text: 'text'
+          },
+          {
+            _links: [
+              { href: '/x/e' },
+              { href: '/x/f' },
+            ],
+            id: 'd',
+            text: 'other'
+          }]
+        }
+      }
+    };
+
+    const nextState = reducer(initialState, action);
+
+    expect(nextState).to.equal(fromJS({
+      paragraphs: {
+        '1': {id: '1', text: 'sample', paragraphs: ['2'] },
+        '2': {id: '2', text: 'other'}
+      }
+    }));
+  });
+
   it('handles SAVE_PARAGRAPH as the first child of an existing paragraph', () => {
     const initialState = fromJS({
       paragraphs: {
