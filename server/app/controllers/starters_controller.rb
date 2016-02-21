@@ -21,7 +21,7 @@ class StartersController < ApplicationController
 
 private
   def make_url(id)
-    '/paragraphs/' + id.to_s + '/'
+    '/api/v1/paragraphs/' + id.to_s + '/'
   end
 
  end

@@ -10,6 +10,10 @@ export const Story = React.createClass({
   mixins: [PureRenderMixin],
   render: function() {
 
+    if(!this.props.has_story) {
+      return <div className="no-stories"></div>;
+    }
+
     var editActions = {
       hideCreateParagraph: this.props.hideCreateParagraph,
       saveParagraph: this.props.saveParagraph
@@ -19,7 +23,7 @@ export const Story = React.createClass({
       <Starter {...this.props.starter} />
       <div className="paragraphs">
         {this.props.creating && <EditParagraph key={"new-paragraph-" + this.props.id } parent={this.props.starter.id} {...editActions} />}
-        {this.props.paragraphs.map(paragraph =>
+        {this.props.paragraphs && this.props.paragraphs.map(paragraph =>
           <ParagraphComponent key={"paragraph-" + paragraph.id} {...paragraph} />
         )}
       </div>
@@ -28,11 +32,18 @@ export const Story = React.createClass({
 });
 
 function mapStateToProps(state) {
+  if(!state.hasIn(['story', 'starter'])) {
+    return {
+      has_story: false
+    }
+  }
+
   const starterId = state.getIn(['story', 'starter']);
   const starter = state.getIn(['paragraphs', starterId]).toJS();
   const creating = !!starter.creating;
 
   return {
+    has_story: true,
     starter,
     creating: creating,
     actions: actionCreators,

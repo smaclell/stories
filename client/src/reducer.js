@@ -1,21 +1,20 @@
 import {List, Map, fromJS} from 'immutable';
 
-function save(state, text, parent) {
+function save(state, text, parent, tempId) {
   if(!state.hasIn(['paragraphs', parent])) {
     return state;
   }
 
-  const id = (state.get('paragraphs').size + 1).toString();
-  const paragraph = Map({id: id, text: text})
+  const paragraph = Map({id: tempId, text: text})
 
   return state
     .updateIn(
       ['paragraphs', parent, 'paragraphs'],
       List(),
-      paragraphs => paragraphs.unshift(id)
+      paragraphs => paragraphs.unshift(tempId)
     )
     .deleteIn(['paragraphs', parent, 'creating'])
-    .setIn(['paragraphs', id], paragraph);
+    .setIn(['paragraphs', tempId], paragraph);
 }
 
 function showCreate(state, parent) {
@@ -60,6 +59,60 @@ function receiveStarters(state, starters) {
   return state;
 }
 
+function receiveParagraph(state, parent, paragraph, url, tempId) {
+  let data = fromJS( paragraph );
+
+  state = state.setIn(['paragraphs', paragraph.id], data);
+
+  if( !state.hasIn(['paragraphs', parent])) {
+    return state;
+  }
+
+  return state
+    .updateIn(
+      ['paragraphs', parent, 'links'],
+      List(),
+      list => {
+        let i = list.indexOf( url );
+        if( i < 0 ) {
+          return list;
+        }
+
+        return list.delete(i);
+      }
+    )
+    .updateIn(
+      ['paragraphs', parent, 'paragraphs'],
+      List(),
+      list => list.push(paragraph.id)
+    );
+}
+
+function replaceParagraph(state, parent, tempId, paragraph) {
+  let data = fromJS( paragraph );
+
+  return state
+    .setIn(['paragraphs', paragraph.id], data)
+    .deleteIn(['paragraphs', tempId])
+    .updateIn(
+      ['paragraphs', parent, 'paragraphs'],
+      List(),
+      list => {
+        let i = list.indexOf( tempId );
+        if( i < 0 ) {
+          return list;
+        }
+
+        return list.delete(i);
+      }
+    )
+    .updateIn(
+      ['paragraphs', parent, 'paragraphs'],
+      List(),
+      list => list.push(paragraph.id)
+    );
+}
+
 var INITIAL_STATE = fromJS({
   starters: {
     "1": {id: "1", text: "Once upon a time", paragraphs: ["2", "3"] }
@@ -76,18 +129,24 @@ var INITIAL_STATE = fromJS({
   }
 });
 
+var INITIAL_STATE = Map();
+
 export default function(state = INITIAL_STATE, action) {
   switch(action.type) {
   case 'SHOW_STORY':
     return showStory(state, action.starter);
   case 'RECIEVE_STARTERS':
     return receiveStarters(state, action.starters);
+  case 'RECIEVE_PARAGRAPH':
+    return receiveParagraph(state, action.parent, action.paragraph, action.url);
   case 'SHOW_CREATE_PARAGRAPH':
     return showCreate(state, action.parent);
   case 'HIDE_CREATE_PARAGRAPH':
     return hideCreate(state, action.parent);
-  case 'SAVE_PARAGRAPH':
-    return save(state, action.text, action.parent);
+  case 'SAVE_TEMP_PARAGRAPH':
+    return save(state, action.text, action.parent, action.tempId);
+  case 'REPLACE_TEMP_PARAGRAPH':
+    return replaceParagraph(state, action.parent, action.tempId, action.paragraph);
   }
   return state;
 }

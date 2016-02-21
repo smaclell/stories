@@ -130,7 +130,79 @@ describe('reducer', () => {
     ));
   });
 
-  it('handles SAVE_PARAGRAPH as the first child of an existing paragraph', () => {
+  it('handles RECIEVE_PARAGRAPH with no parent', () => {
+    const initialState = fromJS({
+    });
+
+    const action = {
+      type: 'RECIEVE_PARAGRAPH',
+      parent: '1',
+      paragraph: {id: '2', text: 'b', links: ['/a/', '/b/']}
+    };
+
+    const nextState = reducer(initialState, action);
+
+    expect(nextState).to.equal(fromJS({
+        paragraphs: {
+          '2': {id: '2', text: 'b', links: ['/a/', '/b/']}
+        }
+      }
+    ));
+  });
+
+  it('handles RECIEVE_PARAGRAPH with parent', () => {
+    const initialState = fromJS({
+      paragraphs: {
+        '1': {id: '1', text: 'a', links: ['/a/', '/b/']}
+      }
+    });
+
+    const action = {
+      type: 'RECIEVE_PARAGRAPH',
+      parent: '1',
+      paragraph: {id: '2', text: 'b', links: ['/c/', '/d/']},
+      url: '/a/'
+    };
+
+    const nextState = reducer(initialState, action);
+
+    expect(nextState).to.equal(fromJS({
+        paragraphs: {
+          '1': {id: '1', text: 'a', links: ['/b/'], paragraphs: ['2']},
+          '2': {id: '2', text: 'b', links: ['/c/', '/d/']}
+        }
+      }
+    ));
+  });
+
+  // TODO: Handle nested temp paragraphs
+  it('handles REPLACE_TEMP_PARAGRAPH by deleting temp paragraph and replacing the tempId', () => {
+    const initialState = fromJS({
+      paragraphs: {
+        '1': {id: '1', text: 'a', paragraphs: ['t']},
+        't': {id: 't', text: 'b', links: ['/c/', '/d/']}
+      }
+    });
+
+    const action = {
+      type: 'REPLACE_TEMP_PARAGRAPH',
+      parent: '1',
+      tempId: 't',
+      paragraph: {id: '2', text: 'b', links: ['/c/', '/d/']},
+    };
+
+    const nextState = reducer(initialState, action);
+
+    expect(nextState).to.equal(fromJS({
+        paragraphs: {
+          '1': {id: '1', text: 'a', paragraphs: ['2']},
+          '2': {id: '2', text: 'b', links: ['/c/', '/d/']}
+        }
+      }
+    ));
+  });
+
+  it('handles SAVE_TEMP_PARAGRAPH as the first child of an existing paragraph', () => {
     const initialState = fromJS({
       paragraphs: {
         '1': {id: '1', text: 'sample'}
@@ -138,24 +210,25 @@ describe('reducer', () => {
     });
 
     const action = {
-      type: 'SAVE_PARAGRAPH',
+      type: 'SAVE_TEMP_PARAGRAPH',
       text: 'new',
-      parent: '1'
+      parent: '1',
+      tempId: 't'
     };
 
     const nextState = reducer(initialState, action);
 
     expect(nextState).to.equal(fromJS({
         paragraphs: {
-          '1': {id: '1', text: 'sample', paragraphs: ['2'] },
-          '2': {id: '2', text: 'new'}
+          '1': {id: '1', text: 'sample', paragraphs: ['t'] },
+          't': {id: 't', text: 'new'}
         }
       }
     ));
 
   });
 
-  it('handles SAVE_PARAGRAPH as an extra child of an existing paragraph', () => {
+  it('handles SAVE_TEMP_PARAGRAPH as an extra child of an existing paragraph', () => {
     const initialState = fromJS({
       paragraphs: {
         '1': {id: '1', text: 'sample', paragraphs: ['2'] },
@@ -164,25 +237,26 @@ describe('reducer', () => {
     });
 
     const action = {
-      type: 'SAVE_PARAGRAPH',
+      type: 'SAVE_TEMP_PARAGRAPH',
       text: 'new',
-      parent: '1'
+      parent: '1',
+      tempId: 't'
     };
 
     const nextState = reducer(initialState, action);
 
     expect(nextState).to.equal(fromJS({
         paragraphs: {
-          '1': {id: '1', text: 'sample', paragraphs: ['3', '2'] },
+          '1': {id: '1', text: 'sample', paragraphs: ['t', '2'] },
           '2': {id: '2', text: 'other'},
-          '3': {id: '3', text: 'new'}
+          't': {id: 't', text: 'new'}
         }
       }
     ));
 
   });
 
-  it('handles SAVE_PARAGRAPH removes "creating" from the paragraph', () => {
+  it('handles SAVE_TEMP_PARAGRAPH removes "creating" from the paragraph', () => {
     const initialState = fromJS({
       paragraphs: {
         '1': {id: '1', text: 'sample', creating: true}
@@ -190,24 +264,25 @@ describe('reducer', () => {
     });
 
     const action = {
-      type: 'SAVE_PARAGRAPH',
+      type: 'SAVE_TEMP_PARAGRAPH',
       text: 'new',
-      parent: '1'
+      parent: '1',
+      tempId: 't'
     };
 
     const nextState = reducer(initialState, action);
 
     expect(nextState).to.equal(fromJS({
         paragraphs: {
-          '1': {id: '1', text: 'sample', paragraphs: ['2'] },
-          '2': {id: '2', text: 'new'}
+          '1': {id: '1', text: 'sample', paragraphs: ['t'] },
+          't': {id: 't', text: 'new'}
         }
       }
     ));
 
   });
 
-  it('handles SAVE_PARAGRAPH with missing parent', () => {
+  it('handles SAVE_TEMP_PARAGRAPH with missing parent', () => {
     const initialState = Map({
       paragraphs: Map({
         '1': {id: '1', text: 'sample' }
@@ -215,9 +290,10 @@ describe('reducer', () => {
     });
 
     const action = {
-      type: 'SAVE_PARAGRAPH',
+      type: 'SAVE_TEMP_PARAGRAPH',
       text: 'new',
-      parent: '2'
+      parent: '2',
+      tempId: 't'
     };
 
     const nextState = reducer(initialState, action);
