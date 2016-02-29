@@ -18,17 +18,48 @@ export function hideCreateParagraph(parent) {
 // TODO: Actually save to the backend
 export function saveParagraph(text, parent) {
   return dispatch => {
+    let tempId = 't' + (fakeId++).toString();
+
     dispatch({
       type: 'SAVE_TEMP_PARAGRAPH',
-      text: text,
       parent: parent,
-      tempId: 't' + (fakeId++).toString()
+      text: text,
+      tempId: tempId
     });
+
+    let request = new Request(rootUrl + '/api/v1/paragraphs/', {
+      method: 'post',
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json'
+      },
+      mode: 'cors',
+      body: JSON.stringify({
+        paragraph: {
+          parent: parent,
+          text: text
+        }
+      })
+    });
+
+    fetch(request)
+      .then(function(res) {
+        return res.json();
+      }).then(function(json) {
+        let paragraph = reformatParagraph(json);
+
+        dispatch({
+          type: 'REPLACE_TEMP_PARAGRAPH',
+          parent: parent,
+          tempId: tempId,
+          paragraph: paragraph
+        });
+      });
   }
 }
 
 function reformatParagraph(data) {
-  let starter = {id: data.id, text: data.text};
+  let paragraph = {id: data.id, text: data.text};
 
   let children = data._links.items;
   if(children && children.length > 0) {
@@ -38,10 +69,10 @@ function reformatParagraph(data) {
       links.push(linkUrl);
     }
 
-    starter.links = links;
+    paragraph.links = links;
   }
 
-  return starter;
+  return paragraph;
 }
 
 // TODO: Show loading in progress
