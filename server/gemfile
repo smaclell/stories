@@ -1,7 +1,7 @@
 source 'https://rubygems.org'
 
 # Bundle edge Rails instead: gem 'rails', github: 'rails/rails'
-gem 'rails', '4.0.2'
+gem 'rails', '4.1'
 
 # Use sqlite3 as the database for Active Record
 gem 'sqlite3'
@@ -27,8 +27,11 @@ gem 'active_model_serializers'
 # For materialized views
 gem 'ancestry'
 
-# CORS 
+# CORS
 gem 'rack-cors', :require => 'rack/cors'
+
+# New in Rails 4.1.0
+gem 'tzinfo-data', platforms: [:mingw, :mswin, :x64_mingw]
 
 group :doc do
   # bundle exec rake doc:rails generates the API under doc/api.
